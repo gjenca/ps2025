@@ -1,10 +1,14 @@
 import socket
 import sys
 import os
+import signal
+
 
 ss=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-ss.bind(("",9998))
+ss.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+ss.bind(("",9999))
 ss.listen(5)
+signal.signal(signal.SIGCHLD,signal.SIG_IGN)
 while True:
     cs,addr=ss.accept()
     print('connected',addr)
