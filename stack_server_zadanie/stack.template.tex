@@ -1,0 +1,24 @@
+\documentclass{article}
+\pagestyle{empty}
+\usepackage{pstricks}
+\usepackage{pst-node}
+\usepackage{graphicx}
+\usepackage{xcolor}
+
+\newcommand{\diaglength}{<<baselength|default('2.2em')>>}
+
+\begin{document}
+\thispagestyle{empty}
+\noindent
+\setlength{\unitlength}{\diaglength}
+\psset{xunit=\diaglength,yunit=\diaglength}
+\newgray{dwhite}{0.99}
+\newgray{wgray}{0.8}
+\begin{picture}(1,1)
+%%for pn in numberstack:
+ \psframe<<pn.box>>
+ \rput<<pn.center>>{<<pn.value>>}
+%%endfor
+\psline<<numberstack.polylinetop>>
+\end{picture}
+\end{document}

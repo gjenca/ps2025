@@ -1,0 +1,29 @@
+C->S PEEK
+C->S
+S->C 205 Stack empty
+S->C
+C->S PUSH  
+C->S 10
+C->S 20
+C->S 30
+C->S
+S->C 100 OK
+S->C
+C->S MULTIPLY
+C->S
+S->C 100 OK
+S->C
+C->S PEEK
+C->S
+S->C 100 OK
+S->C 600
+S->C
+C->S ADD
+C->S
+S->C 100 OK
+S->C
+C->S PEEK
+C->S
+S->C 100 OK
+S->C 610
+S->C

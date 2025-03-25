@@ -1,0 +1,293 @@
+\documentclass[11pt]{article}
+\def\documentlanguage{slovak}
+\usepackage{framed}
+\usepackage{fancyvrb}
+\usepackage{color}
+\usepackage{listings}
+\usepackage{ifpdf}
+\usepackage{ifxetex}
+\usepackage{graphicx}
+\usepackage{longtable}
+\ifpdf %pdftex
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[all,pdf,2cell]{xy}\UseAllTwocells\SilentMatrices
+\usepackage[\documentlanguage]{babel}
+\fi
+\ifxetex %xetex
+\usepackage[all,pdf,2cell]{xy}\UseAllTwocells\SilentMatrices
+\usepackage{polyglossia}
+\begingroup\edef\x{\endgroup\noexpand\setdefaultlanguage{\documentlanguage}}\x%
+\fi
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Príklad}
+\newcommand{\newcategory}[1]{\expandafter\newcommand\csname #1\endcsname{\mathbf{#1}}}
+\input{pygments}
+\begin{document}
+\title{Projekt na získanie zápočtu z predmetu Počítačové siete\\LS 2019/20}
+\maketitle
+\section{Získanie zápočtu}
+\subsection{Formálne aspekty}
+
+\begin{itemize}
+\item Odovzdávať sa bude prostredníctvom githubu, sprístupnením repozitára menom {\tt astack} užívateľovi {\tt gjenca}
+\item Repozitár bude obsahovať iba jeden súbor so zdrojovým kódom, nič iné.
+\item Termín odovzdania projektu je 15.6.2020 polnoc.
+\item Po tomto termíne budú projekty vyhodnotené do troch dní, známka bude zapísaná do AIS a študentom budú oznámené
+požadované zmeny pre zlepšenie známky.
+\item V prípade, že niekto bude mať záujem o zlepšenie známky, bude vypísaný ďalší termín dokedy budú môcť záujemcovia
+odovzdať druhú verziu projektu.
+\end{itemize}
+
+\subsection{Kritériá hodnotenia}
+\begin{itemize}
+\item Posudzovať sa bude korektnosť implementácie v zmysle špecifikácie protokolu.
+\item Posudzovať sa bude aj zdrojový kód: pokiaľ niekto odovzdá príliš škaredý kód, dostane horšiu známku.
+\item Používajte, (adekvátne účelu) prostriedky Pythonu: funkcie, slovníky, triedy, zabudované dátové typy.
+\end{itemize}
+
+\section{Aritmetický zásobník}
+{\em Aritmetický zásobník} je dátová štruktúra, ktorá umožňuje vykonávať výpočty. Pre zjednodušenie
+situácie budeme uvažovať iba o prirodzených číslach a iba o sčítaní a násobení.
+\begin{example}
+Ukážme si, ako prebieha pomocou aritmetického zásobníka výpočet hodnoty 
+jednoduchého výrazu $7.10+3.5$.
+\begin{enumerate}
+\item Na začiatku máme prázdny zásobník.
+\begin{center}
+\includegraphics{stack_empty}
+\end{center}
+\item Vložíme do zásobníka $7$
+\begin{center}
+\includegraphics{stack_7}
+\end{center}
+\item Vložíme do zásobníka $10$
+\begin{center}
+\includegraphics{stack_7_10}
+\end{center}
+\item Vyberieme dve čísla na vrchu zásobníka, vynásobíme ich, výsledok vložíme na vrch zásobníka.
+\begin{center}
+\includegraphics{stack_70}
+\end{center}
+\item Vložíme do zásobníka čísla $3$ a $5$.
+\begin{center}
+\includegraphics{stack_70_3_5}
+\end{center}
+\item Vyberieme dve čísla na vrchu zásobníka, vynásobíme ich, výsledok vložíme na vrch zásobníka.
+\begin{center}
+\includegraphics{stack_70_15}
+\end{center}
+\item Vyberieme dve čísla na vrchu zásobníka, sčítame ich, výsledok vložíme na vrch zásobníka.
+\begin{center}
+\includegraphics{stack_85}
+\end{center}
+\end{enumerate}
+Výsledok je na vrchu zásobníka.
+\end{example}
+Vidíme, že aritmetický zásobník umožňuje v jednom kroku tieto vykonať tieto veci:
+\begin{enumerate}
+\item Vložiť jedno alebo viac prirodzených čísel na vrch zásobníka.
+\item Vybrať dve čísla na vrchu zásobníka, vynásobiť ich, výsledok vložiť na vrch zásobníka.
+\item Vybrať dve čísla na vrchu zásobníka, sčítať ich, výsledok vložiť na vrch zásobníka.
+\end{enumerate}
+Navyše, samozrejme, musí umožňovať zistiť aké číslo je na vrchu zásobníka, aby sme vedeli určiť výsledok výpočtu. Dobre
+by bolo aj to, aby bolo možné zásobník vyprázdniť, aby sme vedeli začať ďalší výpočet.
+
+\section{Protokol pre aritmetický zásobník}
+
+Chceme teraz navrhnúť protokol, ktorý umožní klientovi používať aritmetický zásobník, ktorý je uložený na serveri.
+Najskôr špecifikujeme základné pravidlá.
+
+\subsection{Základné pravidlá}
+
+\begin{itemize}
+\item Protokol bude textový, riadkovo orientovaný.
+\item Bude postavený nad TCP.
+\item Po pripojení klienta vytvorí server nový zásobník, špeciálne pre klienta.
+\item Klient bude serveru posielať \emph{požiadavky} (anglicky \emph{request}) a server po každej požiadavke pošle
+naspäť \emph{odpoveď} (anglicky \emph{response}).
+\item Každá požiadavka a každá odpoveď budú pozostávať z jedného alebo viacerých neprázdnych riadkov, ktoré budú
+nasledované prázdnym riadkom.
+\item Požiadavka bude vždy obsahovať v prvom riadku \emph{metódu}, t.j. jedno slovo z množiny slov 
+{\tt PUSH, MULTIPLY, ADD, PEEK, ZAP}.
+\item Nasledovať bude obsah požiadavky: nula alebo viac neprázdnych riadkov.
+\item Potom bude vždy práve jeden prázdny riadok.
+\item Odpoveď bude mať v prvom riadku \emph{stav} (anglicky status).
+\item Stav obsahuje ako prvé slovo trojciferné číslo, nasledované popisom. Príklad stavu:
+\begin{flushleft}
+{\tt 202 Not a number}
+\end{flushleft}
+\item Nasledovať bude nula alebo viac riadkov s obsahom odpovede.
+\item Potom bude vždy práve jeden prázdny riadok.
+\item Spojenie za normálnych okolností ukončí klient.
+\end{itemize}
+
+\subsection{Metódy}
+Teraz ideme špecifikovať po jednotlivých metódach typy rôznych požiadaviek, možných odpovedí a tomu
+zodpovedajúcich efektov (efekt je v tomto kontexte {\em zmena obsahu zásobníka} a prípadne obsahov odpovedí.
+Ak nie je v tabuľke v poslednom stĺpci uvedený žiaden obsah odpovede, obsah odpovede
+je vtedy prázdny.
+\subsubsection{\tt PUSH}
+Obsah požiadavky je jedno a viac prirodzených čísel, každé na osobitnom riadku.
+\begin{longtable}{|p{12em}|p{12em}|p{15em}|}
+\hline
+	\textbf{Situácia}
+	&
+	\textbf{Stav}
+	& 
+	\textbf{Efekt, prípadný obsah odpovede}\\
+\endhead
+\hline
+	Žiadne čísla neboli poslané, iba prázdny riadok po {\tt PUSH}.
+	&	
+	201 Request content empty
+	&
+	Žiaden efekt.\\
+\hline
+	Na niektorom riadku obsahu požiadavky sa nachádza niečo iné ako prirodzené číslo.
+	&	
+	202 Not a number
+	&
+	Žiaden, t.j. požiadavka ako celok je ignorovaná, včítane prípadne správnych čísel.\\
+\hline
+	Všetko v poriadku. 
+	&
+	100 OK
+	&
+	Uloží čísla do zásobníka, prvé naspodku.\\
+\hline
+\end{longtable}
+\subsubsection{\tt ADD}
+Obsah požiadavky je prázdny.
+\begin{longtable}{|p{12em}|p{12em}|p{15em}|}
+\hline
+	\textbf{Situácia}
+	&
+	\textbf{Odpoveď}
+	& 
+	\textbf{Efekt}\\
+\endhead
+\hline
+	Neprázdny obsah požiadavky.
+	&	
+	204 Request content nonempty
+	&
+	Žiaden efekt.\\
+\hline
+	Zásobník má iba nula alebo jeden prvok.
+	&	
+	203 Stack too short
+	&
+	Žiaden efekt.\\
+\hline
+	Všetko v poriadku. 
+	&
+	100 OK
+	&
+	Efekt: vyberie dve čísla z vrchu zásobníka, sčíta ich a výsledok položí na vrch zásobníka.\\
+\hline
+\end{longtable}
+\subsubsection{\tt MULTIPLY}
+Obsah požiadavky je prázdny.
+\begin{longtable}{|p{12em}|p{12em}|p{15em}|}
+\hline
+	\textbf{Situácia}
+	&
+	\textbf{Odpoveď}
+	& 
+	\textbf{Efekt}\\
+\endhead
+\hline
+	Neprázdny obsah požiadavky.
+	&	
+	204 Request content nonempty
+	&
+	Žiaden efekt.\\
+\hline
+	Zásobník má iba nula alebo jeden prvok.
+	&	
+	203 Stack too short
+	&
+	Žiaden efekt.\\
+\hline
+	Všetko v poriadku. 
+	&
+	100 OK
+	&
+	Efekt: vyberie dve čísla z vrchu zásobníka, vynásobí ich ich a výsledok položí na vrch zásobníka.\\
+\hline
+\end{longtable}
+\newpage
+\subsubsection{\tt PEEK}
+Obsah požiadavky je prázdny.
+\begin{longtable}{|p{12em}|p{12em}|p{15em}|}
+\hline
+	\textbf{Situácia}
+	&
+	\textbf{Odpoveď}
+	& 
+	\textbf{Efekt}\\
+\endhead
+\hline
+	Neprázdny obsah požiadavky.
+	&	
+	204 Request content nonempty
+	&
+	Žiaden efekt.\\
+\hline
+	Zásobník je prázdny.
+	&	
+	205 Stack empty.
+	&
+	Žiaden efekt.\\
+\hline
+	Všetko v poriadku. 
+	&
+	100 OK
+	&
+	Žiaden efekt.
+	Číslo na vrchu zásobníka pošle v obsahu odpovede.\\
+\hline
+\end{longtable}
+\subsubsection{\tt ZAP}
+Obsah požiadavky je prázdny.
+\begin{longtable}{|p{12em}|p{12em}|p{15em}|}
+\hline
+	\textbf{Situácia}
+	&
+	\textbf{Odpoveď}
+	& 
+	\textbf{Efekt}\\
+\endhead
+\hline
+	Neprázdny obsah požiadavky.
+	&	
+	204 Nonempty request content.
+	&
+	Žiaden efekt.\\
+\hline
+	Všetko v poriadku. 
+	&
+	100 OK
+	&
+	Efekt: vyprázdni zásobník.\\
+\hline
+\end{longtable}
+\subsubsection{Zlá požiadavka}
+Ak klient pošle na začiatku požiadavky čokoľvek iné, ako je
+riadok obsahujúci známu metódu, server vráti {\tt 301 Bad request} a uzavrie spojenie.
+
+\subsection{Príklad komunikácie klient-server}
+{\tt C->S} sú označené riadky zasielané klientom serveru, {\tt S->C} naopak. Výraz je $30.20+10$.
+\begin{framed}
+\include{comm.sh}
+\end{framed}
+
+\end{document}
