@@ -1,0 +1,14 @@
+HTTP/1.1 302 Found
+Date: Tue, 08 Apr 2025 12:16:04 GMT
+Server: Apache
+Location: http://www.math.sk/wiki/
+Content-Length: 208
+Content-Type: text/html; charset=iso-8859-1
+
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>302 Found</title>
+</head><body>
+<h1>Found</h1>
+<p>The document has moved <a href="http://www.math.sk/wiki/">here</a>.</p>
+</body></html>

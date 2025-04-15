@@ -1,6 +1,10 @@
+#!/usr/bin/env python3
 import socket
 import sys
 import multiprocessing
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 class ConnectionClosed(Exception):
 
@@ -45,6 +49,7 @@ STATUS_CONTENT_EMPTY=(201,'Content empty')
 STATUS_NOT_A_NUMBER=(202,'Not a number')
 STATUS_STACK_TOO_SHORT=(203,'Stack too short')
 STATUS_CONTENT_NONEMPTY=(204,'Content nonempty')
+STATUS_STACK_EMPTY=(205,'Stack empty')
 STATUS_BAD_REQUEST=(301,'Bad request')
 
 def method_PUSH(req,stack):
@@ -78,12 +83,29 @@ def method_MULTIPLY(req,stack):
     n2=stack.pop()
     stack.append(n1*n2)
     return Response(STATUS_OK)
-    
+
+def method_PEEK(req,stack):
+
+    if req.content:
+        return Response(STATUS_CONTENT_NONEMPTY)
+    if not stack:
+        return Response(STATUS_STACK_EMPTY)
+    return Response(STATUS_OK,content=[stack[-1]])
+
+def method_ZAP(req,stack):
+
+    if req.content:
+        return Response(STATUS_CONTENT_NONEMPTY)
+    stack[:]=[]
+    return Response(STATUS_OK)
+        
 
 METHODS={
     'PUSH':method_PUSH,
     'ADD':method_ADD,
     'MULTIPLY':method_MULTIPLY,
+    'PEEK':method_PEEK,
+    'ZAP':method_ZAP,
 }
 
 def handle_client(cs,addr):
@@ -95,8 +117,8 @@ def handle_client(cs,addr):
             req=Request(f)
         except ConnectionClosed:
             break
-        print(f'method:{req.method}')
-        print(f'content:{req.content}')
+        logging.debug(f'method:{req.method}')
+        logging.debug(f'content:{req.content}')
         if req.method in METHODS:
             response=METHODS[req.method](req,stack)
         else:
@@ -104,8 +126,8 @@ def handle_client(cs,addr):
             response.send(f)
             break
         response.send(f)
-        print(stack)
-    print(f'{addr} disconnected')
+        logging.debug(f'stack:{stack}')
+    logging.info(f'{addr} disconnected')
     f.close()
     cs.close()
 
@@ -116,7 +138,7 @@ ss.listen(5)
 
 while True:
     cs,addr=ss.accept()
-    print('connected',addr)
+    logging.info(f'connected {addr}')
     process=multiprocessing.Process(target=handle_client,args=(cs,addr))
     process.daemon=True
     process.start()
