@@ -49,8 +49,14 @@ class Response:
         f.write(f'HTTP/1.1 {self.status_n} {self.status_desc}\r\n'.encode('ascii'))
         for key in self.headers:
             f.write(f'{key}: {self.headers[key]}\r\n'.encode('ascii'))
+        f.write('Transfer-Encoding: chunked\r\n'.encode('ascii'))
         f.write('\r\n'.encode('ascii'))
-        f.write(self.content)
+        for chunk_i in range(0,self.content,1000):
+            to_send=self.content[chunk_i:chunk_i+1000]
+            f.write(hex(len(to_send))[2:].encode('ascii')+'\r\n')
+            f.write(to_send)
+            f.flush()
+        f.write('0\r\n'.encode('ascii')
         f.flush()
 
 class Request:
@@ -99,7 +105,6 @@ def handle_client(cs,addr):
             except FileNotFoundError:
                 raise ErrorStatus(STATUS_FILE_NOT_FOUND)
             headers={}
-            headers['Content-length']=len(content)
             ext=os.path.splitext(req.url)[1]
             if ext in MIME_TYPES:
                 headers['Content-type']=MIME_TYPES[ext]

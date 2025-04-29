@@ -8,6 +8,7 @@ import os.path
 STATUS_BAD_REQUEST=(400,'Bad request')
 STATUS_OK=(200,'OK')
 STATUS_FILE_NOT_FOUND=(404,'File Not Found')
+STATUS_NOT_MODIFIED=(304,'Not modified')
 
 DOCROOT='doc'
 
@@ -29,11 +30,11 @@ class ErrorStatus(Exception):
 
 class Response:
 
-    def __init__(self,status_pair,headers=None,content=None):
+    def __init__(self,status_pair,headers=None,content=b''):
         
         self.status_n,self.status_desc=status_pair
         self.headers=headers or {}
-        if not content:
+        if not content and status_n>=400:
             self.content=f'''
 <html>
 <body>
@@ -49,8 +50,14 @@ class Response:
         f.write(f'HTTP/1.1 {self.status_n} {self.status_desc}\r\n'.encode('ascii'))
         for key in self.headers:
             f.write(f'{key}: {self.headers[key]}\r\n'.encode('ascii'))
+        f.write('Transfer-Encoding: chunked\r\n'.encode('ascii'))
         f.write('\r\n'.encode('ascii'))
-        f.write(self.content)
+        for chunk_i in range(0,self.content,1000):
+            to_send=self.content[chunk_i:chunk_i+1000]
+            f.write(hex(len(to_send))[2:].encode('ascii')+'\r\n')
+            f.write(to_send)
+            f.flush()
+        f.write('0\r\n'.encode('ascii'))
         f.flush()
 
 class Request:
@@ -97,15 +104,21 @@ def handle_client(cs,addr):
                 with open(DOCROOT+req.url,'rb') as ff:
                     content=ff.read()
             except FileNotFoundError:
-                raise ErrorStatus(STATUS_FILE_NOT_FOUND)
+                raise ErrorStatus(STATUS_FILE_NOT_FOUND)          
             headers={}
-            headers['Content-length']=len(content)
             ext=os.path.splitext(req.url)[1]
             if ext in MIME_TYPES:
                 headers['Content-type']=MIME_TYPES[ext]
             else:
                 headers['Content-type']='application/octet-stream'
-            resp=Response(STATUS_OK,headers,content)
+            md5=hashlib.md5()
+            md5.update(content)
+            etag=md5.hexdigest()
+            if 'if-none-match' in req.headers and \
+                req.headers['if-none-match']==etag:
+                    resp=(STATUS_NOT_MODIFIED,headers)
+            else:
+                resp=Response(STATUS_OK,headers,content)
             resp.send(f)
         except ConnectionClosed:
             break
