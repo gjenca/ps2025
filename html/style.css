@@ -1,0 +1,17 @@
+
+h1 {
+	color:red;
+}
+
+div#footer {
+	color:white;
+	background-color:blue;
+}	
+
+div#header {
+	margin:20px;
+	padding:10px;
+	width:30%;
+	background-color:yellow;
+	float:left;
+}	

@@ -51,12 +51,13 @@ class Response:
             f.write(f'{key}: {self.headers[key]}\r\n'.encode('ascii'))
         f.write('Transfer-Encoding: chunked\r\n'.encode('ascii'))
         f.write('\r\n'.encode('ascii'))
-        for chunk_i in range(0,self.content,1000):
+        for chunk_i in range(0,len(self.content),1000):
             to_send=self.content[chunk_i:chunk_i+1000]
-            f.write(hex(len(to_send))[2:].encode('ascii')+'\r\n')
+            f.write((hex(len(to_send))[2:]+'\r\n').encode('ascii'))
             f.write(to_send)
+            f.write('\r\n'.encode('ascii'))
             f.flush()
-        f.write('0\r\n'.encode('ascii')
+        f.write('0\r\n'.encode('ascii'))
         f.flush()
 
 class Request:
