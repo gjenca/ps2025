@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{funcname}}<h1>
+<table border="1">
+<tr> <th> x </th> <th> value </th> </tr>
+{% for x,value in values %}
+<tr> <td> {{x}} </td> <td>{{value}}</td> </tr>
+{% endfor %}
+</table>
+{% endblock %}
